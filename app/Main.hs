@@ -18,19 +18,26 @@ main = toJSONFilter theoremFilter where
 -- add theorem label data to theorem-like blocks
 addTheoremLabel :: IORef Int ->  Block -> IO Block
 addTheoremLabel counter (Div (divId,classes,attrs)  x ) | "theorem-like" `Prelude.elem` classes = do
-    if ("auto-numbering" `Prelude.elem` classes)
+    if ("unnumbered" `Prelude.notElem` classes)
         then do 
             modifyIORef counter (+1)
             n<-readIORef counter
-            return $ Div (divId,classes,attrs++[("data-theorem-label", (extractAttrValue "name" attrs) <> " " <> (pack (show n)))])  x
+            return $ Div (divId,classes,attrs++[("data-label", (extractAttrValue "name" attrs) <> " " <> (pack (show n)) <> renderTitle (extractAttrValue "title"))])  x
         else
-            return $ Div (divId,classes,attrs++[("data-theorem-label", (extractAttrValue "name" attrs))])  x
+            return $ Div (divId,classes,attrs++[("data-label", (extractAttrValue "name" attrs)<> renderTitle (extractAttrValue "title"))])  x
 addTheoremLabel _ x = return x
 
 addTheoremLabels :: Pandoc -> IO Pandoc
 addTheoremLabels doc = do
     counter <- newIORef 0
     walkM (addTheoremLabel counter) doc
+
+-- add proof label data to proof-like blocks
+addProofLabel :: Block -> Block
+addProofLabel (Div (divId,classes,attrs)  x ) | "proof-like" `Prelude.elem` classes = 
+    Div (divId,classes,attrs++[("data-label", (extractAttrValue "name" attrs) <> renderTitle (extractAttrValue "title"))])  x
+addProofLabels :: Pandoc -> Pandoc
+addProofLabels doc = walk (addProofLabel) doc
 
 -- clever reference to theorem-like blocks
 autoLink::Pandoc -> Inline-> Inline
@@ -41,7 +48,7 @@ autoLink _  x= x
 
 queryTheorem::Text->Block->[Text]
 queryTheorem src (Div (divId,classes,attrs)  _ )| ("theorem-like" `Prelude.elem` classes) && ("#"<>divId==src)= 
-    [extractAttrValue "data-theorem-label" attrs]
+    [extractAttrValue "data-label" attrs]
 queryTheorem _ _ = []
 
 -- extract attribute value
@@ -50,3 +57,8 @@ extractAttrValue attr=mconcat . (Prelude.map helper) where
     helper::(Text,Text)-> Text
     helper (name, value)|name==attr=value
     helper _=""
+
+-- render title
+renderTitle::Text->Text
+renderTitle title|title==""=""
+renderTitle title="("<>title<>")"
