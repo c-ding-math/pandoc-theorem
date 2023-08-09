@@ -12,7 +12,7 @@ main :: IO ()
 main = toJSONFilter theoremFilter where
     theoremFilter::Pandoc->IO Pandoc
     theoremFilter doc = do
-        newdoc<-addTheoremLabels doc
+        newdoc<-(addTheoremLabels . addProofLabels) doc
         return $ walk (autoLink newdoc) newdoc
 
 -- add theorem label data to theorem-like blocks
@@ -22,9 +22,9 @@ addTheoremLabel counter (Div (divId,classes,attrs)  x ) | "theorem-like" `Prelud
         then do 
             modifyIORef counter (+1)
             n<-readIORef counter
-            return $ Div (divId,classes,attrs++[("data-label", (extractAttrValue "name" attrs) <> " " <> (pack (show n)) <> renderTitle (extractAttrValue "title"))])  x
+            return $ Div (divId,classes,attrs++[("data-label", (extractAttrValue "name" attrs) <> " " <> (pack (show n)) <> " " <> renderTitle (extractAttrValue "title" attrs))])  x
         else
-            return $ Div (divId,classes,attrs++[("data-label", (extractAttrValue "name" attrs)<> renderTitle (extractAttrValue "title"))])  x
+            return $ Div (divId,classes,attrs++[("data-label", (extractAttrValue "name" attrs) <> " " <> renderTitle (extractAttrValue "title" attrs))])  x
 addTheoremLabel _ x = return x
 
 addTheoremLabels :: Pandoc -> IO Pandoc
@@ -35,7 +35,9 @@ addTheoremLabels doc = do
 -- add proof label data to proof-like blocks
 addProofLabel :: Block -> Block
 addProofLabel (Div (divId,classes,attrs)  x ) | "proof-like" `Prelude.elem` classes = 
-    Div (divId,classes,attrs++[("data-label", (extractAttrValue "name" attrs) <> renderTitle (extractAttrValue "title"))])  x
+    Div (divId,classes,attrs++[("data-label", (case extractAttrValue "name" attrs of "" -> "Proof"; name -> name ) <> " " <> renderTitle (extractAttrValue "title" attrs))])  x
+addProofLabel x = x
+
 addProofLabels :: Pandoc -> Pandoc
 addProofLabels doc = walk (addProofLabel) doc
 
