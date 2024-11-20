@@ -20,15 +20,15 @@
   (major1) == 4 && (major2) <  16 || \
   (major1) == 4 && (major2) == 16 && (minor) <= 4)
 #endif /* MIN_VERSION_base */
-/* package pandoc-types-1.23.0.1 */
+/* package pandoc-types-1.23.1 */
 #ifndef VERSION_pandoc_types
-#define VERSION_pandoc_types "1.23.0.1"
+#define VERSION_pandoc_types "1.23.1"
 #endif /* VERSION_pandoc_types */
 #ifndef MIN_VERSION_pandoc_types
 #define MIN_VERSION_pandoc_types(major1,major2,minor) (\
   (major1) <  1 || \
   (major1) == 1 && (major2) <  23 || \
-  (major1) == 1 && (major2) == 23 && (minor) <= 0)
+  (major1) == 1 && (major2) == 23 && (minor) <= 1)
 #endif /* MIN_VERSION_pandoc_types */
 /* package text-1.2.5.0 */
 #ifndef VERSION_text
@@ -101,6 +101,16 @@
   (major1) == 0 && (major2) <  68 || \
   (major1) == 0 && (major2) == 68 && (minor) <= 8)
 #endif /* MIN_TOOL_VERSION_hsc2hs */
+/* tool pkg-config-0.29.2 */
+#ifndef TOOL_VERSION_pkg_config
+#define TOOL_VERSION_pkg_config "0.29.2"
+#endif /* TOOL_VERSION_pkg_config */
+#ifndef MIN_TOOL_VERSION_pkg_config
+#define MIN_TOOL_VERSION_pkg_config(major1,major2,minor) (\
+  (major1) <  0 || \
+  (major1) == 0 && (major2) <  29 || \
+  (major1) == 0 && (major2) == 29 && (minor) <= 2)
+#endif /* MIN_TOOL_VERSION_pkg_config */
 /* tool runghc-9.2.5 */
 #ifndef TOOL_VERSION_runghc
 #define TOOL_VERSION_runghc "9.2.5"
