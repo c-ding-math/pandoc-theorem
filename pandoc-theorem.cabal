@@ -68,7 +68,7 @@ executable pandoc-theorem
 
     -- Other library packages from which modules are imported.
     build-depends:    
-        base ^>=4.16.4.0
+        base ^>=4.17.2.1
         , text ^>=1.2
         , pandoc-types ^>=1.23
 
