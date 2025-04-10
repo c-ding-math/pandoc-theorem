@@ -17,16 +17,17 @@ main = toJSONFilter theoremFilter where
 -- add theorem label data to theorem-like blocks
 addTheoremLabel :: IORef Int ->  Block -> IO Block
 addTheoremLabel counter (Div (divId,classes,attrs)  x ) | "theorem-like" `Prelude.elem` classes = do
-    (name, title) <- if ("unnumbered" `Prelude.notElem` classes)
+    let title = renderTitle (extractAttrValue "title" attrs)
+    name <- if ("unnumbered" `Prelude.notElem` classes)
         then do 
             modifyIORef counter (+1)
             n<-readIORef counter
-            return ((extractAttrValue "name" attrs) <> " " <> (pack (show n)), extractAttrValue "title" attrs)
+            return $ (extractAttrValue "name" attrs) <> " " <> (pack (show n))
         else
-            return (extractAttrValue "name" attrs, extractAttrValue "title" attrs)
+            return $ extractAttrValue "name" attrs
     return $ case x of
-        (Para inlines):blocks -> Div (divId,classes,attrs) $ (Para ((Span ("",["theorem-like-label"],[]) [Span ("",["theorem-like-name"],[]) [Str name],Span ("",["theorem-like-title"],[]) [Str title]]):inlines)):blocks
-        _ -> Div (divId,classes,attrs) $ (Div ("",["theorem-like-label"],[]) [Plain [Span ("",["theorem-like-name"],[]) [Str name],Span ("",["theorem-like-title"],[]) [Str title]]]):x
+        (Para inlines):blocks -> Div (divId,classes,attrs) $ (Para ((Span ("",["theorem-like-label"],[]) [Span ("",["theorem-like-name"],[]) [Strong [Str name]],Span ("",["theorem-like-title"],[]) [Strong [Str title]]]):inlines)):blocks
+        _ -> Div (divId,classes,attrs) $ (Div ("",["theorem-like-label"],[]) [Plain [Span ("",["theorem-like-name"],[]) [Strong [Str name]],Span ("",["theorem-like-title"],[]) [Strong [Str title]]]]):x
     
 addTheoremLabel _ x = return x
 
@@ -39,10 +40,10 @@ addTheoremLabels doc = do
 -- add proof label data to proof-like blocks
 addProofLabel :: Block -> Block
 addProofLabel (Div (divId,classes,attrs)  x ) | "proof-like" `Prelude.elem` classes = do
-    let (name, title) = (extractAttrValue "name" attrs, extractAttrValue "title" attrs)
+    let (name, title) = (extractAttrValue "name" attrs, renderTitle (extractAttrValue "title" attrs))
     case x of
-        (Para inlines):blocks -> Div (divId,classes,attrs) $ (Para ((Span ("",["theorem-like-label"],[]) [Span ("",["theorem-like-name"],[]) [Str name],Span ("",["theorem-like-title"],[]) [Str title]]):inlines)):blocks
-        _ -> Div (divId,classes,attrs) $ (Div ("",["theorem-like-label"],[]) [Plain [Span ("",["theorem-like-name"],[]) [Str name],Span ("",["theorem-like-title"],[]) [Str title]]]):x
+        (Para inlines):blocks -> Div (divId,classes,attrs) $ (Para ((Span ("",["theorem-like-label"],[]) [Span ("",["theorem-like-name"],[]) [Strong [Str name]],Span ("",["theorem-like-title"],[]) [Strong [Str title]]]):inlines)):blocks
+        _ -> Div (divId,classes,attrs) $ (Div ("",["theorem-like-label"],[]) [Plain [Span ("",["theorem-like-name"],[]) [Strong [Str name]],Span ("",["theorem-like-title"],[]) [Strong [Str title]]]]):x
 addProofLabel x = x
 
 addProofLabels :: Pandoc -> Pandoc
@@ -56,9 +57,9 @@ autoLink doc (Link attr [] (src,x))=case query (queryTheorem src) doc of
 autoLink _  x= x
 
 queryTheorem::Text->Block->[Text]
-queryTheorem src (Div (divId,classes,_) ((Para (Span ("",["theorem-like-label"],[]) [Span ("",["theorem-like-name"],[]) [Str name],_]:_)):_)) | ("theorem-like" `Prelude.elem` classes) && ("#"<>divId==src)= 
+queryTheorem src (Div (divId,classes,_) ((Para (Span ("",["theorem-like-label"],[]) [Span ("",["theorem-like-name"],[]) [Strong [Str name]],_]:_)):_)) | ("theorem-like" `Prelude.elem` classes) && ("#"<>divId==src)= 
     [name]
-queryTheorem src (Div (divId,classes,_) ((Div ("",["theorem-like-label"],[]) [Plain [Span ("",["theorem-like-name"],[]) [Str name],_]]):_)) | ("theorem-like" `Prelude.elem` classes) && ("#"<>divId==src)= 
+queryTheorem src (Div (divId,classes,_) ((Div ("",["theorem-like-label"],[]) [Plain [Span ("",["theorem-like-name"],[]) [Strong [Str name]],_]]):_)) | ("theorem-like" `Prelude.elem` classes) && ("#"<>divId==src)= 
     [name]
 queryTheorem _ _ = []
 
@@ -71,5 +72,6 @@ extractAttrValue attr=mconcat . (Prelude.map helper) where
 
 -- render title
 renderTitle::Text->Text
-renderTitle title|title==""=""
-renderTitle title="("<>title<>")"
+renderTitle title = if strip title=="" 
+    then "  " 
+    else " ("<>title<>")  "
