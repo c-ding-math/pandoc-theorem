@@ -71,7 +71,8 @@ executable pandoc-theorem
         base >=4.14 && <5
         , text ^>=1.2
         , pandoc-types ^>=1.23
-
+        , mtl ^>=2.3
+        , text-show ^>=3.11
     -- Directories containing source files.
     hs-source-dirs:   app
 
